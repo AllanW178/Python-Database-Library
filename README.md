@@ -6,8 +6,6 @@ _**It's built for safety, not just convenience:**_ The program doesn't trust you
 
 _**The architecture is clean and robust**_: A good house has a solid foundation and a clear layout. Good code is no different. By splitting the work into separate functions—one for setting up, one for adding, one for viewing—the code becomes highly organized. This modular approach makes the program easier to understand and maintain. If a problem occurs with adding a book, a developer knows exactly which "room" to go into to fix it, without accidentally breaking something else. 
 
-_**It’s secure by default**_: A top-notch program realises and prevents problems you might not even think of. The program's use of "parameterized queries" when talking to the database is a prime example. Instead of directly embedding your input into a database command, it uses a secure method that treats your words as data, not as instructions. This prevents a classic type of security attack and is a best practice that shows the developer's skill and foresight
-
 ======================================================================================================================================
 
 
