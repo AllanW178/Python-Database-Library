@@ -50,7 +50,7 @@ def add_book(conn, cursor):
     """
     msg = "Enter new book information"
     title = "Add Book"
-    fieldNames = ["Author", "Title", "Genre", "Pages"]
+    fieldNames = ["Author", "Title", "Genre (Optional)", "Pages (Optional)"]
     # Uses a nice little pop-up window to get the book's basic info.
     fieldValues = eg.multenterbox(msg, title, fieldNames)
 
@@ -133,12 +133,12 @@ def show_books(cursor):
             return
 
         # Sets up the heading for our list, making it look clean and organized.
-        display_text = f"{'Author':<25}{'Title':<25}{'Genre':<20}{'Date Published':<20}{'Pages':<10}\n"
-        display_text += "=" * 100 + "\n"
+        display_text = f"{'Author':<30}{'Title':<35}{'Genre':<35}{'Date Published':<25}{'Pages':<10}\n"
+        display_text += "=" * 150 + "\n"
 
         # Loops through each book and adds its details to our display text.
         for Author, Title, Genre, Date_Published, Pages in rows:
-            display_text += f"{Author:<25}{Title:<25}{Genre or '':<20}{Date_Published or '':<20}{str(Pages or ''):<10}\n"
+            display_text += f"{Author:<30}{Title:<35}{Genre or '':<35}{Date_Published or '':<25}{str(Pages or ''):<10}\n"
 
         # Displays the entire list of books in a special scrollable text box.
         eg.codebox("All Books", "Book List", display_text)
@@ -180,7 +180,6 @@ if __name__ == "__main__":
     # Once the loop is over, we close the connection to our database.
     conn.close()
     eg.msgbox("Goodbye!", "Exiting Program")
-
 
 
 
