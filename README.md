@@ -1,4 +1,4 @@
-**_Why do we need to connect SQL and Python together in order to work?_**
+**_Why do we need to connect SQL and Python together in order to work; purpose_**
 
 _When we talk about software like this library manager, the partnership between Python and SQL is the key to making it work smoothly and reliably for you. Think of Python as the friendly and helpful librarian, and SQL as the powerful and silent vault manager. Python is able to handle all the interactions you see, it's the welcoming face that pops up windows, asks for book details, and makes sure you've entered everything correctly. It's the one who organizes the list of books to be neat and readable for you. Meanwhile, SQL is also another crucial element and the expert in the back room, it perfectly suited for storing and retrieving all your book records. It acts as the application's memory, which ensures your library collection is safe and sound, even after the program closes. By letting these two experts do what they do best, the application feels effortless and robust, which delivers a clear and simple experience without the chaos that would come from trying to do it all with just one tool._
 
