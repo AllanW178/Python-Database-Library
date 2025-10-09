@@ -6,7 +6,7 @@ _**It's built for safety, not just convenience:**_ The program doesn't trust you
 
 _**The architecture is clean and robust**_: A good house has a solid foundation and a clear layout. Good code is no different. By splitting the work into separate functions—one for setting up, one for adding, one for viewing—the code becomes highly organized. This modular approach makes the program easier to understand and maintain. If a problem occurs with adding a book, a developer knows exactly which "room" to go into to fix it, without accidentally breaking something else. 
 
-======================================================================================================================================
+======================================================================================================================
 
 
 
