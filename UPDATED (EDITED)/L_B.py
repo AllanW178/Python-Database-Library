@@ -100,7 +100,6 @@ def add_book(conn, cursor):
 
     author_names = [a[1] for a in authors]
 
-    # Handle different author list sizes safely
     if len(author_names) == 1:
         author_choice = author_names[0]
         eg.msgbox(f"Only one author found: '{author_choice}' will be assigned.", "Author Selected")
@@ -125,7 +124,6 @@ def add_book(conn, cursor):
         eg.msgbox("Title is required.", "Input Error")
         return
 
-    # Validate and format date
     if Date_Published:
         try:
             parsed_date = datetime.strptime(Date_Published, "%d/%m/%Y")
@@ -136,7 +134,6 @@ def add_book(conn, cursor):
     else:
         Date_Published = None
 
-    # Validate pages
     if Pages and not Pages.isdigit():
         eg.msgbox("Pages must be a number.", "Input Error")
         return
@@ -153,10 +150,149 @@ def add_book(conn, cursor):
 
 
 # -----------------------------
+# Add Borrower
+# -----------------------------
+def add_borrower(conn, cursor):
+    """Add a new borrower."""
+    msg = "Enter borrower details"
+    title = "Add Borrower"
+    fields = ["Borrower Name", "Email (Optional)", "Phone (Optional)"]
+    values = eg.multenterbox(msg, title, fields)
+
+    if not values:
+        return
+
+    Borrower_Name, Email, Phone = [v.strip() for v in values]
+
+    if not Borrower_Name:
+        eg.msgbox("Borrower name is required.", "Input Error")
+        return
+
+    try:
+        cursor.execute(
+            "INSERT INTO Borrowers (Borrower_Name, Email, Phone) VALUES (?, ?, ?)",
+            (Borrower_Name, Email or None, Phone or None)
+        )
+        conn.commit()
+        eg.msgbox(f"Borrower '{Borrower_Name}' added successfully!", "Success")
+    except sqlite3.Error as e:
+        eg.exceptionbox(f"Failed to add borrower: {e}", "Database Error")
+
+
+# -----------------------------
+# Record Loan
+# -----------------------------
+def record_loan(conn, cursor):
+    """Record a book loan to a borrower."""
+    # Get available books
+    cursor.execute("SELECT Book_ID, Title FROM Library_database")
+    books = cursor.fetchall()
+    if not books:
+        eg.msgbox("No books available. Please add a book first.", "Missing Book")
+        return
+
+    # Get borrowers
+    cursor.execute("SELECT Borrower_ID, Borrower_Name FROM Borrowers")
+    borrowers = cursor.fetchall()
+    if not borrowers:
+        eg.msgbox("No borrowers found. Please add a borrower first.", "Missing Borrower")
+        return
+
+    book_titles = [b[1] for b in books]
+    borrower_names = [b[1] for b in borrowers]
+
+    book_choice = eg.choicebox("Select a book to loan:", "Select Book", book_titles)
+    if not book_choice:
+        return
+    borrower_choice = eg.choicebox("Select borrower:", "Select Borrower", borrower_names)
+    if not borrower_choice:
+        return
+
+    book_id = next(b[0] for b in books if b[1] == book_choice)
+    borrower_id = next(b[0] for b in borrowers if b[1] == borrower_choice)
+    loan_date = datetime.now().strftime("%d/%m/%Y")
+
+    try:
+        cursor.execute("""
+            INSERT INTO Loans (Book_ID, Borrower_ID, Loan_Date)
+            VALUES (?, ?, ?)
+        """, (book_id, borrower_id, loan_date))
+        conn.commit()
+        eg.msgbox(f"Book '{book_choice}' loaned to '{borrower_choice}' on {loan_date}.", "Success")
+    except sqlite3.Error as e:
+        eg.exceptionbox(f"Failed to record loan: {e}", "Database Error")
+
+
+# -----------------------------
+# Mark Book as Returned
+# -----------------------------
+def return_book(conn, cursor):
+    """Mark a book as returned."""
+    cursor.execute("""
+        SELECT L.Loan_ID, B.Title, R.Borrower_Name, L.Loan_Date
+        FROM Loans L
+        JOIN Library_database B ON L.Book_ID = B.Book_ID
+        JOIN Borrowers R ON L.Borrower_ID = R.Borrower_ID
+        WHERE L.Return_Date IS NULL
+    """)
+    loans = cursor.fetchall()
+
+    if not loans:
+        eg.msgbox("No active loans found.", "Return Book")
+        return
+
+    loan_list = [f"{b} (Borrowed by {r} on {d})" for _, b, r, d in loans]
+    choice = eg.choicebox("Select a loan to mark as returned:", "Return Book", loan_list)
+    if not choice:
+        return
+
+    loan_id = loans[loan_list.index(choice)][0]
+    return_date = datetime.now().strftime("%d/%m/%Y")
+
+    try:
+        cursor.execute("UPDATE Loans SET Return_Date = ? WHERE Loan_ID = ?", (return_date, loan_id))
+        conn.commit()
+        eg.msgbox(f"Book marked as returned on {return_date}.", "Success")
+    except sqlite3.Error as e:
+        eg.exceptionbox(f"Failed to mark book as returned: {e}", "Database Error")
+
+
+# -----------------------------
+# Show All Loans
+# -----------------------------
+def show_loans(cursor):
+    """Display all loan records."""
+    try:
+        cursor.execute("""
+            SELECT L.Loan_ID, B.Title, R.Borrower_Name, L.Loan_Date, L.Return_Date
+            FROM Loans L
+            JOIN Library_database B ON L.Book_ID = B.Book_ID
+            JOIN Borrowers R ON L.Borrower_ID = R.Borrower_ID
+            ORDER BY L.Loan_Date DESC
+        """)
+        rows = cursor.fetchall()
+
+        if not rows:
+            eg.msgbox("No loan records found.", "Loan List")
+            return
+
+        display_text = f"{'Loan ID':<8}{'Book Title':<30}{'Borrower':<25}{'Loan Date':<15}{'Return Date':<15}\n"
+        display_text += "=" * 95 + "\n"
+
+        for loan_id, title, borrower, loan_date, return_date in rows:
+            display_text += f"{loan_id:<8}{title:<30}{borrower:<25}{loan_date:<15}{(return_date or 'Not Returned'):<15}\n"
+
+        eg.codebox("Library Loans", "Loan Records", display_text)
+
+    except sqlite3.Error as e:
+        eg.exceptionbox(f"Failed to retrieve loans: {e}", "Database Error")
+
+
+# -----------------------------
 # Show Books
 # -----------------------------
 def show_books(cursor):
-    """Display all books in a scrollable window."""
+    """Display all books."""
     try:
         cursor.execute("""
             SELECT L.Title, L.Genre, L.Date_Published, L.Pages, A.Author_Name
@@ -199,15 +335,32 @@ if __name__ == "__main__":
         choice = eg.buttonbox(
             "What would you like to do?",
             "Library Management Menu",
-            ["Add Author", "Add Book", "View Books", "Exit"]
+            [
+                "Add Author",
+                "Add Book",
+                "Add Borrower",
+                "Record Loan",
+                "Return Book",
+                "View Books",
+                "View Loans",
+                "Exit"
+            ]
         )
 
         if choice == "Add Author":
             add_author(conn, cursor)
         elif choice == "Add Book":
             add_book(conn, cursor)
+        elif choice == "Add Borrower":
+            add_borrower(conn, cursor)
+        elif choice == "Record Loan":
+            record_loan(conn, cursor)
+        elif choice == "Return Book":
+            return_book(conn, cursor)
         elif choice == "View Books":
             show_books(cursor)
+        elif choice == "View Loans":
+            show_loans(cursor)
         elif choice in ("Exit", None):
             break
 
