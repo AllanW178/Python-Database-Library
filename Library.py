@@ -1,3 +1,25 @@
+
+
+
+
+
+#============================================
+# NOTE: this was added to meet the standard.
+#============================================
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # we need to import easygui, sqlite3, and os in order to make the program works (three modules).
 import easygui as eg
 import sqlite3
@@ -226,4 +248,5 @@ if __name__ == "__main__":
 
     # Once the loop is over, we close the connection to our database.
     conn.close()
+
     eg.msgbox("Goodbye!", "Exiting Program")
